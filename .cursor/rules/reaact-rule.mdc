@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+https://unpkg.com/react@18/umd/react.development.js を利用します
+
+そして、 https://ja.react.dev/reference/rules こちらを元に記載をしてください

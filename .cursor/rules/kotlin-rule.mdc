@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+kotlin のバージョンは 1.9.25 を使用する
+
+java のバージョンは 21 を使用する
+
+spring boot のバージョンは 3.5.0 を使用する
+
+gradle のバージョンは 8.14 を使用する
+
+kotlin のフォーマットは https://kotlinlang.org/docs/coding-conventions.html を元にしてください
+
+./gradlew build を行い、問題ないことを必ず確認してください。
+
+ビルドエラーの修正については自分で編集しつつ、5度実行して解消しなければ連絡してください
