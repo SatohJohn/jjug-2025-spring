@@ -1,6 +1,5 @@
 plugins {
-	id 'org.jetbrains.kotlin.jvm' version '1.9.25'
-	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -22,31 +21,19 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.postgresql:postgresql:42.7.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'com.h2database:h2:2.2.224'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	implementation 'dev.openfeature:sdk:1.15.1'
 	implementation 'dev.openfeature.contrib.providers:flagd:0.11.8'
 	implementation 'com.devcycle:java-server-sdk:2.6.2'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.postgresql:postgresql:42.7.3'
-	testImplementation 'com.h2database:h2:2.2.224'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'com.google.adk:google-adk:0.1.0'
     implementation 'com.google.adk:google-adk-dev:0.1.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3' // Or a recent stable version
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-rx3:1.7.3' // For Flowable support
     implementation 'com.google.cloud:google-cloud-vertexai:1.20.0' // Using a specific version
-}
-
-kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll '-Xjsr305=strict'
-	}
 }
 
 tasks.named('test') {

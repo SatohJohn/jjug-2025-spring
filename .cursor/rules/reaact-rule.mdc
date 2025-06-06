@@ -3,6 +3,9 @@ description:
 globs: 
 alwaysApply: true
 ---
-https://unpkg.com/react@18/umd/react.development.js を利用します
+frontend ディレクトリで実装されます。
+
+buildを行うと src の resource/static 内に配置されます。
+そのため修正を行った後は npm run build を実施してください。
 
 そして、 https://ja.react.dev/reference/rules こちらを元に記載をしてください
