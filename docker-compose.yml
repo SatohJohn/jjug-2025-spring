@@ -1,17 +1,35 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: sample-postgres
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      - PORT=${PORT:-8080}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - OPENFEATURE_PROVIDERS_FLAGD_HOST=${FLAGD_HOST:-flagd}
+      - OPENFEATURE_PROVIDERS_FLAGD_PORT=${FLAGD_PORT:-8013}
+      - OPENFEATURE_PROVIDERS_FLAGD_TIMEOUT=${FLAGD_TIMEOUT:-30000}
+    depends_on:
+      - db
+      - flagd
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
   flagd:
@@ -25,4 +43,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pgdata: 
+  postgres_data: 
