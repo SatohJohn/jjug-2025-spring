@@ -1,3 +1,15 @@
+# Use Node.js for frontend build
+FROM node:20 AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend files
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
 # Use Gradle with JDK 21 (as specified in build.gradle's java toolchain)
 FROM gradle:jdk21 AS builder
 
@@ -15,11 +27,14 @@ RUN gradle dependencies --no-daemon
 # Copy the rest of the source code
 COPY src ./src
 
+# Copy frontend build artifacts
+COPY --from=frontend-builder /app/frontend/dist ./src/main/resources/static
+
 # Build the Spring Boot executable jar
 RUN gradle bootJar --no-daemon
 
 # Start a new stage from a minimal JDK image
-FROM eclipse-temurin:21-jre-jammy
+FROM openjdk:21-jre-slim
 
 WORKDIR /app
 
@@ -33,4 +48,4 @@ EXPOSE 8080
 
 # The command to run your application
 # Spring Boot will automatically use the PORT environment variable if set.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -jar app.jar --server.port=${PORT:-8080}"]
