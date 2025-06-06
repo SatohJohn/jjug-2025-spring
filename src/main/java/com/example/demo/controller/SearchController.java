@@ -14,6 +14,7 @@ import com.google.genai.types.Part;
 
 import dev.openfeature.sdk.Client;
 import dev.openfeature.sdk.ImmutableContext;
+import dev.openfeature.sdk.MutableTrackingEventDetails;
 import dev.openfeature.sdk.Value;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,16 +44,23 @@ public class SearchController {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(SearchController.class);
-    private final LlmAgent searchAgent = GoogleSearchAgent.ROOT_AGENT;
-    private final InMemoryRunner runner = new InMemoryRunner(searchAgent);
+    private final LlmAgent searchAgentA = GoogleSearchAgent.ROOT_AGENT_A;
+    private final LlmAgent searchAgentB = GoogleSearchAgent.ROOT_AGENT_B;
+    private final LlmAgent searchAgentC = GoogleSearchAgent.ROOT_AGENT_C;
     private final String userId = "user_" + UUID.randomUUID();
-
+    
     @GetMapping
     public String search(@RequestParam String query) {
         String sessionId = "session_" + UUID.randomUUID();
-        String agentName = searchAgent.name();
-
         this.openFeatureClient.setEvaluationContext(new ImmutableContext(Map.of("user_id", new Value(userId))));
+        String agentNameKind = this.openFeatureClient.getStringValue("agent-response-ab", "agent_a");
+        LlmAgent searchAgent = switch (agentNameKind) {
+            case "agent_a" -> searchAgentA;
+            case "agent_b" -> searchAgentB;
+            case "agent_c" -> searchAgentC;
+            default -> throw new IllegalArgumentException("Invalid agent name: " + agentNameKind);
+        };
+        InMemoryRunner runner = new InMemoryRunner(searchAgent);
 
         try {
             Session session = runner.sessionService().getSession(searchAgent.name(), userId, sessionId, Optional.empty()).blockingGet();
@@ -92,7 +100,7 @@ public class SearchController {
 
             // 最後のイベントを取得
             Event finalAgentEvent = events.stream()
-                    .filter(event -> agentName.equals(event.author()))
+                    .filter(event -> searchAgent.name().equals(event.author()))
                     .reduce((first, second) -> second)
                     .orElseThrow(() -> {
                         logger.error("Events received: {}", events.stream()
@@ -117,14 +125,22 @@ public class SearchController {
 
     @PostMapping("/track")
     public String track(@RequestBody SearchEvaluation request) {
+        String agentName = this.openFeatureClient.getStringValue("agent-response-ab", "agent_a");
+        LlmAgent searchAgent = switch (agentName) {
+            case "agent_a" -> searchAgentA;
+            case "agent_b" -> searchAgentB;
+            case "agent_c" -> searchAgentC;
+            default -> throw new IllegalArgumentException("Invalid agent name: " + agentName);
+        };
+
         this.openFeatureClient.track(
             "agent-response-ab",
-            new ImmutableContext(Map.of(
-                "user_id", new Value(userId),
-                "rate", new Value(request.rating()),
-                "query", new Value(request.query()),
-                "agent_name", new Value(searchAgent.name())
-            )));
+            new MutableTrackingEventDetails()
+            .add("user_id", userId)
+            .add("rate", request.rating())
+            .add("query", request.query())
+            .add("agent_name", searchAgent.name())
+        );
         return "Tracked";
     }
 }

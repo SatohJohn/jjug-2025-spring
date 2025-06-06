@@ -20,35 +20,71 @@ const Search = () => {
     }
   };
 
+  const handleRating = async (rating) => {
+    try {
+      const response = await fetch('/api/search/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: query,
+          rating: rating
+        })
+      });
+      const result = await response.text();
+      if (result.startsWith('Error:')) {
+        alert('評価の送信に失敗しました: ' + result);
+      } else {
+        alert('評価ありがとうございます！');
+      }
+    } catch (error) {
+      console.error('評価エラー:', error);
+      alert('評価の送信に失敗しました');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div style={{ width: '100%', padding: '3rem 1rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-8">検索</h1>
-            <div className="mb-8">
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="検索クエリを入力..."
-                />
-                <button
-                  onClick={handleSearch}
-                  disabled={isLoading}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? '検索中...' : '検索'}
-                </button>
-              </div>
+            <div className="flex gap-4 mb-8">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="検索キーワードを入力..."
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              >
+                検索
+              </button>
             </div>
             {result && (
-              <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">検索結果:</h2>
-                <p className="text-gray-600 whitespace-pre-wrap">{result}</p>
+              <div className="mt-8">
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <p className="text-gray-800 whitespace-pre-wrap">{result}</p>
+                </div>
+                <div className="mt-4 flex gap-4">
+                  <button
+                    onClick={() => handleRating(1)}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    良い 👍
+                  </button>
+                  <button
+                    onClick={() => handleRating(0)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  >
+                    悪い 👎
+                  </button>
+                </div>
               </div>
             )}
           </div>
