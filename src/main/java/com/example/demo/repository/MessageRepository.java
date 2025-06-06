@@ -1,8 +1,9 @@
 package com.example.demo.repository;
 
-import org.springframework.data.repository.CrudRepository;
-
 import com.example.demo.dto.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface MessageRepository extends CrudRepository<Message, Long> {
+@Repository
+public interface MessageRepository extends JpaRepository<Message, Long> {
 } 

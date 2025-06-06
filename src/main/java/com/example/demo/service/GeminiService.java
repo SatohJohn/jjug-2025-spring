@@ -18,7 +18,7 @@ public class GeminiService {
     public GeminiService(@Value("${GOOGLE_API_KEY:}") String apiKey) {
         this.apiKey = apiKey;
         this.webClient = WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:streamGenerateContent")
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
@@ -34,6 +34,7 @@ public class GeminiService {
                 .accept(MediaType.TEXT_EVENT_STREAM, MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToFlux(Map.class)
+                .doOnNext(map -> System.out.println("Gemini API raw response: " + map))
                 .map(map -> map.get("candidates"))
                 .filter(candidates -> candidates instanceof List)
                 .flatMapIterable(candidates -> (List<?>) candidates)

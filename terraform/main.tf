@@ -19,6 +19,9 @@ resource "google_container_cluster" "primary" {
   # Autopilotモードを有効化
   enable_autopilot = true
 
+  # クラスターの削除を許可
+  deletion_protection = false
+
   # Autopilotでは、以下の設定は不要になります
   # - remove_default_node_pool
   # - initial_node_count

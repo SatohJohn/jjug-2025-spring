@@ -24,13 +24,13 @@ variable "cluster_name" {
 variable "pods_ipv4_cidr" {
   description = "The IP address range for pods in this cluster"
   type        = string
-  default     = "10.0.0.0/14"
+  default     = "10.1.0.0/16"
 }
 
 variable "services_ipv4_cidr" {
   description = "The IP address range for services in this cluster"
   type        = string
-  default     = "10.4.0.0/19"
+  default     = "10.2.0.0/16"
 }
 
 variable "master_ipv4_cidr" {
