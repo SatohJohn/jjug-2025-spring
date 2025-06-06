@@ -18,7 +18,7 @@ public class GeminiService {
     public GeminiService(@Value("${GOOGLE_API_KEY:}") String apiKey) {
         this.apiKey = apiKey;
         this.webClient = WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent")
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
