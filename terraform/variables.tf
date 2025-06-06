@@ -79,3 +79,12 @@ variable "gke_service_port_for_lb" {
   type        = number
   default     = 80
 }
+
+variable "dns_zone_name" {
+  description = "The DNS name for the managed zone (e.g. example.com.)"
+  type        = string
+  validation {
+    condition     = var.dns_zone_name != ""
+    error_message = "The dns_zone_name value is required. Please set TF_VAR_dns_zone_name environment variable."
+  }
+}

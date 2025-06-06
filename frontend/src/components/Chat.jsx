@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const eventSourceRef = useRef(null);
 
   useEffect(() => {
     fetchMessages();
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
   }, []);
 
   const fetchMessages = async () => {
@@ -26,25 +32,63 @@ const Chat = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/chat/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: newMessage }),
+
+    // まずユーザーのメッセージを右側に追加
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content: newMessage,
+        senderType: 'USER',
+      },
+    ]);
+
+    // SSEでAI返答をストリーム受信
+    const eventSource = new window.EventSource(`/api/chat/stream?content=${encodeURIComponent(newMessage)}`);
+    eventSourceRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      setMessages((prev) => {
+        // すでにAIメッセージが仮で追加されていれば、そのcontentに追記
+        const last = prev[prev.length - 1];
+        if (last && last.senderType === 'AI') {
+          return [
+            ...prev.slice(0, -1),
+            { ...last, content: last.content + event.data },
+          ];
+        } else {
+          return [
+            ...prev,
+            {
+              id: Date.now() + 1,
+              content: event.data,
+              senderType: 'AI',
+            },
+          ];
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('メッセージの送信に失敗しました');
-      }
-
-      setNewMessage('');
-      await fetchMessages();
-    } catch (error) {
-      console.error('メッセージの送信に失敗しました:', error);
-    } finally {
+    };
+    eventSource.onerror = () => {
       setIsLoading(false);
+      eventSource.close();
+    };
+    eventSource.onopen = () => {
+      // 何もしない
+    };
+
+    setNewMessage('');
+  };
+
+  const handleReset = async () => {
+    if (isLoading) return;
+    try {
+      const response = await fetch('/api/chat/reset', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('リセットに失敗しました');
+      }
+      setMessages([]);
+    } catch (error) {
+      alert('リセットに失敗しました');
     }
   };
 
@@ -52,7 +96,16 @@ const Chat = () => {
     <div className="w-full px-4 py-12">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">チャット</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-800">チャット</h1>
+            <button
+              onClick={handleReset}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+              disabled={isLoading}
+            >
+              チャット履歴リセット
+            </button>
+          </div>
           <div className="mb-8 h-[60vh] overflow-y-auto flex flex-col gap-2">
             {messages.map((message) => (
               <div

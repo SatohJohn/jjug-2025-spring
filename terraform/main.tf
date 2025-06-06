@@ -64,6 +64,7 @@ resource "google_sql_database_instance" "sql_instance" {
   name             = "gke-sql-instance"
   database_version = "POSTGRES_17"
   region           = var.region
+  depends_on       = [google_service_networking_connection.private_vpc_connection]
   settings {
     tier              = "db-f1-micro"
     availability_type = "REGIONAL"
@@ -140,4 +141,24 @@ resource "google_compute_global_forwarding_rule" "gke_forwarding_rule" {
   target                = google_compute_target_https_proxy.gke_https_proxy.self_link
   port_range            = "443"
   load_balancing_scheme = "EXTERNAL_MANAGED"
+}
+
+resource "google_dns_managed_zone" "main" {
+  name        = "sample-zone"
+  dns_name    = var.dns_zone_name
+  description = "Sample DNS zone for JJUGCCC 2025"
+}
+
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "private-ip-address"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.vpc.id
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
 }
