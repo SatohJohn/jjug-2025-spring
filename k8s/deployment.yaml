@@ -44,6 +44,21 @@ spec:
             secretKeyRef:
               name: db-credentials
               key: password
+        - name: DEVCYCLE_SERVER_SDK_KEY
+          valueFrom:
+            secretKeyRef:
+              name: other-credentials
+              key: devcycle_server_sdk_key
+        - name: DEVCYCLE_CLIENT_SDK_KEY
+          valueFrom:
+            secretKeyRef:
+              name: other-credentials
+              key: devcycle_client_sdk_key
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: other-credentials
+              key: google_api_key
 ---
 apiVersion: v1
 kind: Service
@@ -51,6 +66,7 @@ metadata:
   name: jjugccc-2025
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "jjugccc-2025-backendconfig"}'
 spec:
   type: ClusterIP
   ports:
@@ -58,4 +74,44 @@ spec:
     targetPort: 8080
     protocol: TCP
   selector:
-    app: jjugccc-2025 
+    app: jjugccc-2025
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: jjugccc-2025-backendconfig
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: iap-oauth-credentials
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jjugccc-2025-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: "gke-lb-ssl-cert"
+    kubernetes.io/ingress.global-static-ip-name: "gke-lb-ip"
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.force-ssl-redirect: "true"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jjugccc-2025
+                port:
+                  number: 80
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: gke-lb-ssl-cert
+spec:
+  domains:
+    - jjugccc2025.satohjohn.tapioka.org

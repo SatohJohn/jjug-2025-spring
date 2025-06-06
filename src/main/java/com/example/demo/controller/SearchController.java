@@ -13,6 +13,11 @@ import com.google.adk.sessions.Session;
 // InvocationContext.create will be the focus of this plan step.
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
+
+import dev.openfeature.sdk.Client;
+import dev.openfeature.sdk.ImmutableContext;
+import dev.openfeature.sdk.Value;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,18 +35,23 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/api/search")
 public class SearchController {
+    private final Client openFeatureClient;
+
+    public SearchController(Client openFeatureClient) {
+        this.openFeatureClient = openFeatureClient;
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(SearchController.class);
     private final LlmAgent searchAgent = GoogleSearchAgent.ROOT_AGENT;
     private final InMemoryRunner runner = new InMemoryRunner(searchAgent);
-    private final InMemorySessionService sessionService = new InMemorySessionService();
-    private final InMemoryArtifactService artifactService = new InMemoryArtifactService();
 
     @GetMapping
     public String search(@RequestParam String query) {
         String userId = "user_" + UUID.randomUUID();
         String sessionId = "session_" + UUID.randomUUID();
         String agentName = searchAgent.name();
-        String invocationId = InvocationContext.newInvocationContextId();
+
+        this.openFeatureClient.setEvaluationContext(new ImmutableContext(Map.of("user_id", new Value(userId))));
 
         try {
             Session session = runner.sessionService().getSession(searchAgent.name(), userId, sessionId, Optional.empty()).blockingGet();

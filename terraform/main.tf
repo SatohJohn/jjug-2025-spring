@@ -46,6 +46,15 @@ resource "google_container_cluster" "primary" {
   release_channel {
     channel = "REGULAR"
   }
+
+  # ロードバランサーからの通信を許可
+  master_authorized_networks_config {
+    # 必要に応じて以下のようなCIDRブロックを追加
+    cidr_blocks {
+      cidr_block   = "0.0.0.0/0"  # 本番環境では適切なCIDRに制限することを推奨
+      display_name = "Allow all"
+    }
+  }
 }
 
 resource "google_compute_network" "vpc" {
@@ -99,50 +108,6 @@ resource "google_compute_global_address" "gke_lb_ip" {
   name = "gke-lb-ip"
 }
 
-resource "google_compute_managed_ssl_certificate" "gke_lb_ssl_cert" {
-  name = "gke-lb-ssl-cert"
-  managed {
-    domains = [var.lb_domain_name]
-  }
-}
-
-resource "google_compute_health_check" "gke_http_health_check" {
-  name = "gke-http-health-check"
-  http_health_check {
-    port         = var.gke_service_port_for_lb
-    request_path = "/"
-  }
-}
-
-resource "google_compute_backend_service" "gke_backend_service" {
-  name                  = "gke-backend-service"
-  protocol              = "HTTP"
-  port_name             = "http"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
-  health_checks         = [google_compute_health_check.gke_http_health_check.self_link]
-  # NEG configuration will be referenced here once GKE services are annotated.
-  # For now, this backend service won't have any backends.
-}
-
-resource "google_compute_url_map" "gke_url_map" {
-  name            = "gke-url-map"
-  default_service = google_compute_backend_service.gke_backend_service.self_link
-}
-
-resource "google_compute_target_https_proxy" "gke_https_proxy" {
-  name             = "gke-https-proxy"
-  url_map          = google_compute_url_map.gke_url_map.self_link
-  ssl_certificates = [google_compute_managed_ssl_certificate.gke_lb_ssl_cert.self_link]
-}
-
-resource "google_compute_global_forwarding_rule" "gke_forwarding_rule" {
-  name                  = "gke-forwarding-rule"
-  ip_address            = google_compute_global_address.gke_lb_ip.self_link
-  target                = google_compute_target_https_proxy.gke_https_proxy.self_link
-  port_range            = "443"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
-}
-
 resource "google_dns_managed_zone" "main" {
   name        = "sample-zone"
   dns_name    = var.dns_zone_name
@@ -162,3 +127,32 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
 }
+
+resource "google_compute_firewall" "allow_lb_to_gke" {
+  name    = "allow-lb-to-gke"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = [var.gke_service_port_for_lb]
+  }
+
+  source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]  # Google Cloud Load BalancerのIP範囲
+  target_tags = ["gke-${var.cluster_name}"]
+}
+
+# ヘルスチェック用のファイアウォールルール
+resource "google_compute_firewall" "allow_health_check" {
+  name    = "allow-health-check"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = [var.gke_service_port_for_lb]
+  }
+
+  source_ranges = ["130.211.0.0/22", "35.191.0.0/16", "209.85.152.0/22", "209.85.204.0/22"]  # Google Cloud Health Check
+  target_tags = ["gke-${var.cluster_name}"]
+}
+
+# ノードプールの設定は削除（Autopilotモードでは不要）

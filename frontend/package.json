@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@devcycle/openfeature-react-provider": "^1.6.0",
+    "@openfeature/flagd-web-provider": "^0.7.3",
+    "@openfeature/react-sdk": "^1.0.0",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-query-devtools": "^5.80.6",
     "@tanstack/react-router": "^1.120.16",
