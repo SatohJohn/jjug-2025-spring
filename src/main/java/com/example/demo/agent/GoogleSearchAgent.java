@@ -7,7 +7,7 @@ public class GoogleSearchAgent {
     public static final LlmAgent ROOT_AGENT = LlmAgent.builder()
             .name("search_assistant")
             .description("An assistant that can search the web.")
-            .model("gemini-1.5-flash")
+            .model("gemini-2.0-flash")
             .instruction("You are a helpful assistant. Answer user questions using Google Search when needed. you must reply in Japanese.")
             .tools(new GoogleSearchTool())
             .build();

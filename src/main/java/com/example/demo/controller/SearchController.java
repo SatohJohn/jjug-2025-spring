@@ -1,12 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.agent.GoogleSearchAgent;
-import com.google.adk.agents.InvocationContext;
+import com.example.demo.dto.SearchEvaluation;
 import com.google.adk.agents.RunConfig;
-import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
 import com.google.adk.runner.InMemoryRunner;
-import com.google.adk.sessions.InMemorySessionService;
 import com.google.adk.sessions.Session;
 // Intentionally using com.google.cloud.vertexai.api.Content for now,
 // as this is what we know resolves. The type mismatch with
@@ -19,6 +17,8 @@ import dev.openfeature.sdk.ImmutableContext;
 import dev.openfeature.sdk.Value;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+
 @RestController
 @RequestMapping("/api/search")
 public class SearchController {
@@ -44,10 +45,10 @@ public class SearchController {
     private static final Logger logger = LoggerFactory.getLogger(SearchController.class);
     private final LlmAgent searchAgent = GoogleSearchAgent.ROOT_AGENT;
     private final InMemoryRunner runner = new InMemoryRunner(searchAgent);
+    private final String userId = "user_" + UUID.randomUUID();
 
     @GetMapping
     public String search(@RequestParam String query) {
-        String userId = "user_" + UUID.randomUUID();
         String sessionId = "session_" + UUID.randomUUID();
         String agentName = searchAgent.name();
 
@@ -68,7 +69,7 @@ public class SearchController {
 
             List<Event> events = new java.util.ArrayList<>();
             logger.info("Starting agent execution for query: {}", query);
-            
+
             try {
                 runner.runAsync(session, userMsg, runConfig)
                         .timeout(30, TimeUnit.SECONDS)
@@ -112,5 +113,18 @@ public class SearchController {
                     e.getMessage(),
                     e.getStackTrace()[0].toString());
         }
+    }
+
+    @PostMapping("/track")
+    public String track(@RequestBody SearchEvaluation request) {
+        this.openFeatureClient.track(
+            "agent-response-ab",
+            new ImmutableContext(Map.of(
+                "user_id", new Value(userId),
+                "rate", new Value(request.rating()),
+                "query", new Value(request.query()),
+                "agent_name", new Value(searchAgent.name())
+            )));
+        return "Tracked";
     }
 }

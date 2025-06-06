@@ -10,7 +10,7 @@ import { useBooleanFlagValue } from '@openfeature/react-sdk';
 
 // ページコンポーネント
 const Home = () => {
-  const flag = useBooleanFlagValue('showHello', false)
+  const flag = useBooleanFlagValue('file-attachment', false)
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="w-full px-4 py-12">

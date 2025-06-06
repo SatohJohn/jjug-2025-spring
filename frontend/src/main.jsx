@@ -6,10 +6,10 @@ import { OpenFeature, OpenFeatureProvider } from '@openfeature/react-sdk';
 import DevCycleReactProvider from '@devcycle/openfeature-react-provider'
 import { FlagdWebProvider } from '@openfeature/flagd-web-provider'
 
-const flag = true
+const flag = import.meta.env.VITE_FEATURE_PROVIDER
 if (flag) {
   await OpenFeature.setContext({ user_id: 'user_id' })
-  await OpenFeature.setProviderAndWait(new DevCycleReactProvider("xxxxx"));
+  await OpenFeature.setProviderAndWait(new DevCycleReactProvider(import.meta.env.VITE_DEVCYCLE_CLIENT_SDK_KEY));
 } else {
   OpenFeature.setProvider(new FlagdWebProvider({
     host: 'localhost',
