@@ -15,7 +15,7 @@ steps:
       - 'clusters'
       - 'get-credentials'
       - '$_CLUSTER_NAME'
-      - '--zone=asia-northeast'
+      - '--zone=asia-northeast1'
       - '--project=$PROJECT_ID'
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
