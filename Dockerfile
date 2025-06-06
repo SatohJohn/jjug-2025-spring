@@ -34,7 +34,7 @@ COPY --from=frontend-builder /app/frontend/dist ./src/main/resources/static
 RUN gradle bootJar --no-daemon
 
 # Start a new stage from a minimal JDK image
-FROM openjdk:21-jre-slim
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
