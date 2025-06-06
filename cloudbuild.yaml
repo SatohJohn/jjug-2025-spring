@@ -1,0 +1,32 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME', '.']
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME']
+
+  # Deploy to GKE
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'container'
+      - 'clusters'
+      - 'get-credentials'
+      - 'gke-cluster'
+      - '--zone=asia-northeast1-a'
+      - '--project=$PROJECT_ID'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: kubectl
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/jjugccc-2025'
+      - 'jjugccc-2025=asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME'
+
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME'
+
+timeout: '1800s' 

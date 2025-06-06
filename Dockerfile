@@ -22,7 +22,7 @@ COPY gradlew ./
 COPY gradle ./gradle/
 
 # Download dependencies
-RUN gradle dependencies --no-daemon
+RUN gradle dependencies --no-daemon --max-workers 4
 
 # Copy the rest of the source code
 COPY src ./src
@@ -31,7 +31,7 @@ COPY src ./src
 COPY --from=frontend-builder /app/frontend/dist ./src/main/resources/static
 
 # Build the Spring Boot executable jar
-RUN gradle bootJar --no-daemon
+RUN gradle bootJar --no-daemon --max-workers 4 -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=512m"
 
 # Start a new stage from a minimal JDK image
 FROM eclipse-temurin:21-jre-jammy
