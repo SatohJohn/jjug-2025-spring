@@ -43,4 +43,39 @@ variable "subnet_ip_cidr" {
   description = "The IP address range for the subnet"
   type        = string
   default     = "10.0.0.0/24"
-} 
+}
+
+variable "sql_user_password" {
+  description = "Password for the Cloud SQL user."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = var.sql_user_password != ""
+    error_message = "The sql_user_password value is required."
+  }
+}
+
+variable "artifact_repo_id" {
+  description = "ID for the Artifact Registry repository."
+  type        = string
+  default     = "gke-app-repository"
+  validation {
+    condition     = var.artifact_repo_id != ""
+    error_message = "The artifact_repo_id value is required."
+  }
+}
+
+variable "lb_domain_name" {
+  description = "The domain name for the Load Balancer's SSL certificate (e.g., app.yourdomain.com)."
+  type        = string
+  validation {
+    condition     = var.lb_domain_name != ""
+    error_message = "The lb_domain_name value is required."
+  }
+}
+
+variable "gke_service_port_for_lb" {
+  description = "The port number of the GKE service the load balancer will target for health checks and traffic."
+  type        = number
+  default     = 80
+}
