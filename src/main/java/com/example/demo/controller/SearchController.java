@@ -134,7 +134,8 @@ public class SearchController {
         };
 
         this.openFeatureClient.track(
-            "agent-response-ab",
+            "agent-response",
+            new ImmutableContext("agent-response-ab"),
             new MutableTrackingEventDetails()
             .add("user_id", userId)
             .add("rate", request.rating())
