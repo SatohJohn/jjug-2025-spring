@@ -1,11 +1,11 @@
 steps:
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME', '.']
+    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$COMMIT_SHA', '.']
 
   # Push the image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME']
+    args: ['push', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$COMMIT_SHA']
 
   # Deploy to GKE
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -24,9 +24,9 @@ steps:
       - 'set'
       - 'image'
       - 'deployment/jjugccc-2025'
-      - 'jjugccc-2025=asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME'
+      - 'jjugccc-2025=asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$COMMIT_SHA'
 
 images:
-  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$TAG_NAME'
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/gke-app-repository/app:$COMMIT_SHA'
 
 timeout: '1800s' 
